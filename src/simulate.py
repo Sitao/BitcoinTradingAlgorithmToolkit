@@ -43,11 +43,11 @@ def profit( prices, signals):
   down        =  0.0
   if type( signals) == pd.Series:
     if signals.size > 1:
-      print "Signals must be a single column"
+      print("Signals must be a single column")
       return
   elif type(signals) == pd.DataFrame:
     if len(signals.columns) > 1:
-      print "Signals must be a single column"
+      print("Signals must be a single column")
       return
   for i in xrange( len(prices)):
     if type(signals) == pd.DataFrame:
