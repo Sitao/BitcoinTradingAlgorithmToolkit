@@ -1,6 +1,6 @@
-import data
+import src.data
 import dtools as dts
-import indicators as ind
+import src.indicators as ind
 import pandas as pd
 import numpy as np
 import random
@@ -55,8 +55,8 @@ def gene_type():
   return g
 
 def different( x):
-  for i in xrange( len(x)):
-    for ii in xrange( len(x)):
+  for i in range( len(x)):
+    for ii in range( len(x)):
       if i != ii:
         if x[i] == x[ii]:
           return False
@@ -72,7 +72,7 @@ def rand_gene():
   g = gene_type()
   ind = [0]*len(g)
   
-  for i in xrange( len(g)):
+  for i in range( len(g)):
     if g[i] == bool:
       ind[i] = ri(0,1)
     elif g[i] == int:
@@ -208,7 +208,7 @@ def mutate_gene( ind, mu=0, sigma=4, chance_mutation=0.4):
   """
   g = gene_type()
   
-  for i in xrange( len(ind)):
+  for i in range( len(ind)):
     # if we're supposed to mutate, randomly
     if random.random() < chance_mutation:
       if g[i] == bool:
@@ -233,7 +233,7 @@ def verify_gene( ind):
   """
   g = gene_type()
   
-  for i in xrange( len(ind)):
+  for i in range( len(ind)):
     if g[i] == bool:
       # convert back to bool and then int
       ind[i] = int(bool(ind[i]))

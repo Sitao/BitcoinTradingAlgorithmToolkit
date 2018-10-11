@@ -137,7 +137,7 @@ There are a few python Neural Network packages. Only two had even close to enoug
     DS = SupervisedDataSet( len(dataset.values[0]), np.size(tgt.values[0]) )
 
     # fill it
-    for i in xrange( len( dataset)):
+    for i in range( len( dataset)):
       DS.appendLinked( dataset.values[i], [ tgt.values[i]] )
 
     # split 70% for training, 30% for testing
@@ -161,11 +161,11 @@ There are a few python Neural Network packages. Only two had even close to enoug
     trainer.trainOnDataset( train_set, 30)
 
     # test on training set
-    predictions_train = np.array( [ net.activate( train_set["input"][i])[0] for i in xrange( len(train_set)) ])
+    predictions_train = np.array( [ net.activate( train_set["input"][i])[0] for i in range( len(train_set)) ])
     plt.plot( train_set["target"], c="k"); plt.plot( predictions_train, c="r"); plt.show()
 
     # and on test set
-    predictions_test = np.array( [ net.activate( test_set["input"][i])[0] for i in xrange( len(test_set)) ])
+    predictions_test = np.array( [ net.activate( test_set["input"][i])[0] for i in range( len(test_set)) ])
     plt.plot( test_set["target"], c="k"); plt.plot( predictions_test, c="r"); plt.show()
 
 And there you have it.

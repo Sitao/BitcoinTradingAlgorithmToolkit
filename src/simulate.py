@@ -49,7 +49,7 @@ def profit( prices, signals):
     if len(signals.columns) > 1:
       print("Signals must be a single column")
       return
-  for i in xrange( len(prices)):
+  for i in range( len(prices)):
     if type(signals) == pd.DataFrame:
       signal = signals.ix[i][0]
     else:

@@ -1,10 +1,10 @@
-import processlogs2 as pl2
-import indicators as ind
+import src.processlogs2 as pl2
+import src.indicators as ind
 import dtools as dts
 import datetime
 import pandas as pd
 import numpy as np
-import cPickle
+import pickle as cPickle
 import re
 import os
 
@@ -784,7 +784,7 @@ class Data:
                 else:
                     if self.verbose: print("[*]", "Calculating midprices ...")
                     bas = [pl2.bid_ask(self._ltc_depth_offline.ix[i][0],
-                                       avg=True) for i in xrange(len(self._ltc_depth_offline))]
+                                       avg=True) for i in range(len(self._ltc_depth_offline))]
                     f = open(filename, "wb")
                     if self.verbose: print("[*]", "Saving midprices to %s" % filename)
                     cPickle.dump(bas, f)
@@ -822,7 +822,7 @@ class Data:
             if self.gox_opts["calc_mid"]:
                 if self.verbose: print("[*]", "Calculating midprices ...")
                 bas = [pl2.bid_ask(self._gox_depth_offline.ix[i][0], avg=True) for i in
-                       xrange(len(self._gox_depth_offline))]
+                       range(len(self._gox_depth_offline))]
                 self.gox_opts["instant"] = pd.DataFrame({"lastprice": bas}, index=[self._gox_depth_offline.index])
             # otherwise hand it lastprice
             else:

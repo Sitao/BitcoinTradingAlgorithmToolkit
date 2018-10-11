@@ -1,10 +1,10 @@
 import numpy as np
 import pandas as pd
-import processlogs2 as pl2
-import indicators as ind
-import data
+import src.processlogs2 as pl2
+import src.indicators as ind
+import src.data
 import csv
-import cPickle
+import pickle as cPickle
 import time
 
 #################
@@ -127,7 +127,7 @@ def cut_init_nans( dataset):
   """
   # find first non-NaN val, cut there (it needs time to warm up)
   iii = 0
-  for iii in xrange( len(dataset)):
+  for iii in range( len(dataset)):
     nn = False
     for iiii in dataset.ix[iii]:
       if np.isnan(iiii):
