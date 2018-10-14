@@ -788,8 +788,6 @@ class Data:
 
         self.ltc_opts["instant"] = pd.DataFrame( {"lastprice":bas}, 
                                      index=self._ltc_depth_offline.index)
-        self._ltc_depth_offline.to_csv('logs\offline.csv')
-        self.ltc_opts["instant"].to_csv('logs\instant.csv')
 
       # otherwise hand it lastprice
       else:
