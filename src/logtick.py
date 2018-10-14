@@ -18,18 +18,17 @@ def fetch(url):
       if( code == 200):
         return url, r.read()
       else:
-        print("Error", code)
+        print "Error", code
     except Exception as e:
-      print("WOAH!!!", url, e)
-
+      print "WOAH!!!", url, e
 
 # verify gox json API response
 # DEFINE PRICE AS last price
 def gox_tick_last( body):
   try:
     j = json.loads( body)
-  except ValueError as e:
-    print("BTC-e error", e, url)
+  except ValueError, e:
+    print "BTC-e error", e, url
   if j["result"] == "success":
     last = float( j["data"]["last"]["value"])
     buy  = float( j["data"]["buy"]["value"])
@@ -39,16 +38,15 @@ def gox_tick_last( body):
     bs = get_buy_sell( last, buy, sell)
     return { "price":last, "type":bs, "time":t}
   else:
-    print("Error", j)
-
+    print "Error", j
 
 # verify/process btc-e ticker json API response
 # this defines price as last
 def btce_tick_last(body):
   try:
     j = json.loads( body)
-  except ValueError as e:
-    print("BTC-e error", e, url)
+  except ValueError, e:
+    print "BTC-e error", e, url
   buy  = float( j["ticker"]["buy"])
   buy  = float( j["ticker"]["buy"])
   sell = float( j["ticker"]["sell"])
@@ -131,7 +129,7 @@ def process_responses( url_body_list):
   return processed
 
 def usage():
-  print("USAGE: %s FILENAME\n" % sys.argv[0])
+  print "USAGE: %s FILENAME\n" % sys.argv[0]
   sys.exit()
 
 def process_args():

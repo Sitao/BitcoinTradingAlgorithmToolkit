@@ -114,7 +114,7 @@ def nearest_by_date( data, date="2013-04-18 00:01:01", return_date=False):
   try:
     i = data.index.searchsorted( date)
   except KeyError:
-    print("Keyerror, resampling & retrying")
+    print "Keyerror, resampling & retrying"
     data = data.resample("1s").ffill()
     i = data.index.searchsorted( date)
   # this returns a timeseries with one variable
@@ -123,7 +123,7 @@ def nearest_by_date( data, date="2013-04-18 00:01:01", return_date=False):
     if ts.name > pd.to_datetime( date) and i-1 > 0:
       ts = data.ix[i-1]
   except IndexError:
-    print("Index error")
+    print "Index error"
     return np.NaN
   if return_date:
     # return the timeseries object (date & value)
