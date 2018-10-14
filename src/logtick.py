@@ -172,8 +172,8 @@ if __name__ == "__main__":
       p = processed
 
       # insert timestamp and write to log
-      print(datetime.datetime.fromtimestamp(
-        time.time()).strftime('%Y-%m-%d %H:%M:%S'))
+      print datetime.datetime.fromtimestamp( 
+          time.time()).strftime('%Y-%m-%d %H:%M:%S')
       w.writerow( [ p["gox_price"], p["gox_type"], p["gox_time"],
                     p["btc_usd_price"], p["btc_type"], p["btc_time"],
                     p["ltc_btc_price"], p["ltc_btc_type"], p["ltc_btc_time"],
@@ -185,4 +185,4 @@ if __name__ == "__main__":
       time.sleep(3)
   except KeyboardInterrupt:
     f.close()
-    print("Caught Ctl-Z/C exiting!\nL8r.")
+    print "Caught Ctl-Z/C exiting!\nL8r."

@@ -1,4 +1,4 @@
-import src.processlogs2 as pl2
+import processlogs2 as pl2
 import datetime
 import pandas as pd
 import numpy as np
@@ -31,7 +31,7 @@ def ADX( ohlc, n=14 ):
   DM = ohlc.low.shift(1) - ohlc.low
 
   # get +DM and -DM ... all positive or zero vals
-  for i in range( len(ohlc)):
+  for i in xrange( len(ohlc)):
     if ( UM.ix[i] > DM.ix[i]) and ( UM.ix[i] > 0):
       #UDM.ix[i] = UDM.ix[i]
       pass
@@ -87,7 +87,7 @@ def AMA( df, n=10, fn=2.5, sn=30):
     sums = np.zeros( len(abs_diff))
     sums[:n] = np.NaN
 
-    for ii in range( n, len(abs_diff)):
+    for ii in xrange( n, len(abs_diff)):
       sums[ii] = abs_diff.ix[(ii-n)+1:ii+1].values.sum()
     
     # n-perod volitility for each tick in our DF
@@ -109,7 +109,7 @@ def AMA( df, n=10, fn=2.5, sn=30):
     
     # get first index with a non-NaN value
     iii = 0
-    for iii in range( len(ERs)):
+    for iii in xrange( len(ERs)):
       if not np.isnan( ERs.ix[iii][0]):
         break
     
@@ -117,7 +117,7 @@ def AMA( df, n=10, fn=2.5, sn=30):
     ama[iii-1] = df.ix[:n].values.mean()
     ama[:iii-1] = np.NaN
     
-    for i in range( iii, len( ama)):
+    for i in xrange( iii, len( ama)):
       ama[i] = ( ERs.ix[i][0] * ( df.ix[i][0] - ama[i-1] ) ) + ama[i-1]
     
     ama_df = pd.DataFrame( {"AMA": ama}, index=[df.index])
@@ -157,14 +157,14 @@ def CCI( ohlc, n=20):
     means = np.zeros( len(typical_price))
     means[:n-1] = np.NaN
     
-    for i in range( n-1, len(typical_price)):
+    for i in xrange( n-1, len(typical_price)):
       means[i] = typical_price.ix[(i-n)+1:i+1].values.mean()
 
     # MAD = absolute difference between each point in
     # the period from the period's mean, averaged
     MADs = np.zeros( len(typical_price))
     MADs[:n-1] = np.NaN
-    for i in range( n-1, len(typical_price)):
+    for i in xrange( n-1, len(typical_price)):
       MADs[i] = np.abs(typical_price.ix[(i-n)+1:i+1] - means[i]).mean()
 
     cci = pd.DataFrame( {"CCI_%s"%n: ((1 / 0.015) * ( ( typical_price - SMAtp) / MADs ))},
@@ -260,7 +260,7 @@ def FRAMA( ohlc, n=10):
   """
   # n must be even
   if n % 2 == 1:
-    print("[!]", "FRAMA n must be even. Adding one")
+    print "[!]", "FRAMA n must be even. Adding one"
     n += 1
   # don't fuck wit it if we aint got the info to work
   if len( ohlc) < n:
@@ -269,7 +269,7 @@ def FRAMA( ohlc, n=10):
     # iterate through n-period chunks, calculate alpha values
     alphas = np.zeros( len(ohlc))
     alphas[:n] = np.NaN
-    for i in range( n, len( ohlc)):
+    for i in xrange( n, len( ohlc)):
       per = ohlc.ix[i-n:i]
       N1 = ( np.max( per.ix[0:n/2].high) - np.min( per.ix[0:n/2].low)) / ( n / 2)
       N2 = ( np.max( per.ix[n/2:].high) - np.min( per.ix[n/2:].low)) / ( n / 2)
@@ -282,7 +282,7 @@ def FRAMA( ohlc, n=10):
     frama[n-1] = ohlc.ix[:n].values.mean()
     frama[:n-1] = np.NaN
 
-    for i in range( n, len( frama)):
+    for i in xrange( n, len( frama)):
       frama[i] = ( alphas[i] * ( ohlc.ix[i]["close"] - frama[i-1] ) ) + frama[i-1]
 
     frama_df = pd.DataFrame( {"FRAMA": frama}, index=[ohlc.index])
@@ -366,7 +366,7 @@ def RSI( ohlc, n=14):
   U = np.zeros(n_ohlc)
   D = np.zeros(n_ohlc)
   # build our Up/Dwn arrays
-  for i in range( len( ohlc)):
+  for i in xrange( len( ohlc)):
     # close(now) and close(prev)
     now = ohlc.close[i]
     prev = ohlc.close.shift(1)[i]
