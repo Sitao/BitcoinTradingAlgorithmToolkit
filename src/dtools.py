@@ -28,7 +28,7 @@ def minmax( dataset, crt=False, std=False):
     dmax = np.max(A)
     B = imin + (imax - imin)*(A - dmin)/(dmax - dmin)
     dataset = dataset.drop( [column], axis=1)
-    dataset = dataset.join( pd.DataFrame( {column:B}, index=[B.index]), how="outer")
+    dataset = dataset.join( pd.DataFrame( {column:B}, index=B.index), how="outer")
     #elif crt or std:
     #  raise NotImplementedError
   return dataset

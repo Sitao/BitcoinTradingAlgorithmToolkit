@@ -81,7 +81,7 @@ def rand_gene():
 
 def decode_gene( g, mins):
   # build genetic list
-  # g          = [0] * 42
+  # g = [0] * 42
   rolling    = g[0]  #= True  # calc rolling?
   r_1        = g[1]  #= 12    # rolling n 1
   r_2        = g[2]  #= 24    # rolling n 2

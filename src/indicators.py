@@ -19,12 +19,12 @@ def ADX( ohlc, n=14 ):
   # get our true range
   TR = pd.DataFrame( {"h-l":ohlc.high - ohlc.low,
                       "h-cp":np.abs( ohlc.high - ohlc.close.shift(1)),
-                      "l-cp":np.abs( ohlc.low  - ohlc.close.shift(1))}, index=[ohlc.index])
+                      "l-cp":np.abs( ohlc.low  - ohlc.close.shift(1))}, index=ohlc.index)
 
-  TR = pd.Series( np.max( TR.values, axis=1 ), index=[ohlc.index])
+  TR = pd.Series( np.max( TR.values, axis=1 ), index=ohlc.index)
 
   # n-period EMA makes this average true range (ATR)
-  ATR = pd.ewma( TR, span=n, min_periods=n )
+  ATR = pd.DataFrame(TR).ewm(span=n, min_periods=n ).mean()
 
   # get our UDM (+ Directional Movement) and DDM (-DM)
   UM = ohlc.high - ohlc.high.shift(1)
@@ -43,12 +43,15 @@ def ADX( ohlc, n=14 ):
       DM.ix[i] = 0
 
   # N-period EMA of both
-  UDI = ( 100 * pd.ewma( UM, span=n, min_periods=n)) / ATR
-  DDI = ( 100 * pd.ewma( DM, span=n, min_periods=n)) / ATR
+  UM_mean = ( 100 * pd.DataFrame(UM).ewm(span=n, min_periods=n).mean())
+  DM_mean = ( 100 * pd.DataFrame(DM).ewm(span=n, min_periods=n).mean())
+  UDI = UM_mean['high'] / ATR[0]
+  DDI = DM_mean['low'] / ATR[0]
+  RATE = np.abs( (UDI - DDI) / ( UDI + DDI))
+  _ADX = 100 * pd.DataFrame(RATE).ewm(span=n, min_periods=n).mean()
 
-  _ADX = 100 * pd.ewma( np.abs( (UDI - DDI) / ( UDI + DDI)), span=n, min_periods=n)
-
-  return pd.DataFrame( {"ADX_%s"%n:_ADX}, index=[ohlc.index])
+  result = pd.DataFrame( {"ADX_%s"%n:_ADX[0]}, index=ohlc.index)
+  return result
 
 ###########################
 #  ADAPTIVE MOVING AVERAGE
@@ -71,8 +74,9 @@ def AMA( df, n=10, fn=2.5, sn=30):
       sn = (default 30) slow moving average periods
   """
   #if we got a TimeSeries, convert it to a DF
-  if type( df) == pd.TimeSeries:
-    df = pd.DataFrame( {df.name:df.values}, index=[df.index])
+  # if type( df) == pd.TimeSeries:
+  if type(df) == pd.Series:
+    df = pd.DataFrame( {df.name:df.values}, index=df.index)
     
   # don't fuck wit it if we aint got the info to work
   if len( df) < n:
@@ -91,7 +95,7 @@ def AMA( df, n=10, fn=2.5, sn=30):
       sums[ii] = abs_diff.ix[(ii-n)+1:ii+1].values.sum()
     
     # n-perod volitility for each tick in our DF
-    volatilities = pd.DataFrame( {df.columns[0]:sums}, index=[directions.index])
+    volatilities = pd.DataFrame( {df.columns[0]:sums}, index=directions.index)
     # division by 0 REALLY fucks this up, so sub a ridiculously small val
     volatilities = volatilities.replace( 0, 1e-100)
     
@@ -114,14 +118,15 @@ def AMA( df, n=10, fn=2.5, sn=30):
         break
     
     # get an average to start our AMA with
+    print df.ix[:n].values.mean()
     ama[iii-1] = df.ix[:n].values.mean()
     ama[:iii-1] = np.NaN
     
     for i in xrange( iii, len( ama)):
       ama[i] = ( ERs.ix[i][0] * ( df.ix[i][0] - ama[i-1] ) ) + ama[i-1]
-    
-    ama_df = pd.DataFrame( {"AMA": ama}, index=[df.index])
-    assert False == np.isnan(ama_df[n+1:]).any()
+
+    ama_df = pd.DataFrame( {"AMA": ama}, index=df.index)
+    assert False == pd.isna(ama_df[n+1:]).any()[0]
   return ama_df
 
 ###########################
@@ -150,7 +155,7 @@ def CCI( ohlc, n=20):
     # our typical prices
     typical_price = (ohlc["high"] + ohlc["low"] + ohlc["close"]) / 3
     # SMA of our typical prices
-    SMAtp = pd.rolling_mean( typical_price, window=n)
+    SMAtp = pd.Series(typical_price).rolling(window=n).mean()
     # mean absolute deviation
 
     # get each period's mean
@@ -168,12 +173,12 @@ def CCI( ohlc, n=20):
       MADs[i] = np.abs(typical_price.ix[(i-n)+1:i+1] - means[i]).mean()
 
     cci = pd.DataFrame( {"CCI_%s"%n: ((1 / 0.015) * ( ( typical_price - SMAtp) / MADs ))},
-                        index=[typical_price.index] )
+                        index=typical_price.index )
 
     # if we have any NaN values in the body of our CCI then we have problemz
-    if np.isnan(cci[n+1:]).any():
-      cci = cci[n+1:].replace( np.NaN, 0)
-    assert False == np.isnan(cci[n+1:]).any()
+    # if pd.isnan(cci[n+1:]).any():
+    #   cci = cci[n+1:].replace( np.NaN, 0)
+    assert False == pd.isna(cci[n+1:]).any()[0]
     # say hello 2 our little friend
     return cci
 
@@ -205,12 +210,13 @@ def CRT( ohlc, n):
   if len(ohlc) > n+1:
     # get latest price and date
     crt = np.log(ohlc.close) - np.log(ohlc.open.shift(n-1))
-    crt_df = pd.DataFrame( {"CRT_%s"%n:crt}, index=[ohlc.index])
+    crt_df = pd.DataFrame( {"CRT_%s"%n:crt}, index=ohlc.index)
     # this is a bad hack ... but apparently there are some oddities
     # making the final value appear to be inf or nan, caused by a
     # zero-val OHLC, we're going to make it 0 crt
-    if np.isnan( crt_df.ix[-1]) or np.isinf( crt_df.ix[-1]):
-      crt_df.ix[-1] = 0
+    # if pd.isna( crt_df.ix[-1])[0] or pd.isinf( crt_df.ix[-1]):
+    #   crt_df.ix[-1] = 0
+    crt_df.ix[-1].fillna(0)
     #assert False == np.isnan(crt_df[n+1:]).any()
     return crt_df
   else:
@@ -234,16 +240,16 @@ def ELI( ohlc, n=14):
           on the market/dataset, but I found 14 to work well for now.
   """
   a = n / 4.0
-  _EMA1 = pd.ewma( ohlc.close, span=a)
+  _EMA1 = pd.DataFrame( ohlc.close).ewm( span=a).mean()
 
   a = n / 2.0
-  _EMA2 = pd.ewma( ohlc.close, span=a)
+  _EMA2 = pd.DataFrame( ohlc.close).ewm( span=a).mean()
 
   syn = _EMA1 - _EMA2
-  _EMAsyn = pd.ewma( syn, span=a)
+  _EMAsyn = pd.DataFrame( syn).ewm( span=a).mean()
   _ELI = syn - _EMAsyn
 
-  return pd.DataFrame( { "ELI_%s"%n: _ELI }, index=[ohlc.index])
+  return pd.DataFrame( { "ELI_%s"%n: _ELI.close }, index=ohlc.index)
 
 ###########################
 #  FRACTAL ADAPTIVE MOVING AVERAGE
@@ -285,8 +291,8 @@ def FRAMA( ohlc, n=10):
     for i in xrange( n, len( frama)):
       frama[i] = ( alphas[i] * ( ohlc.ix[i]["close"] - frama[i-1] ) ) + frama[i-1]
 
-    frama_df = pd.DataFrame( {"FRAMA": frama}, index=[ohlc.index])
-    assert False == np.isnan(frama_df[n+1:]).any()
+    frama_df = pd.DataFrame( {"FRAMA": frama}, index=ohlc.index)
+    assert False == pd.isna(frama_df[n+1:]).any()[0]
 
     return frama_df
 
@@ -294,12 +300,14 @@ def FRAMA( ohlc, n=10):
 #     MACD
 ###########################
 def MACD( ohlc, f=12, s=26, m=9):
-  fast_ema = pd.ewma( ohlc.close, span=f)
-  slow_ema = pd.ewma( ohlc.close, span=s)
+  fast_ema = pd.DataFrame(ohlc.close).ewm(span=f).mean()
+  slow_ema = pd.DataFrame(ohlc.close).ewm(span=s).mean()
   macd = fast_ema - slow_ema
-  macd_sig = pd.ewma( macd, span=9)
+  macd_sig = pd.DataFrame(macd).ewm(span=9).mean()
   hist = macd - macd_sig
-  return pd.DataFrame( {"MACD_hist":hist, "MACD":macd_sig}, index=[ohlc.index])
+  print hist.head()
+  print macd_sig.head()
+  return pd.DataFrame( {"MACD_hist":hist['close'], "MACD":macd_sig['close']}, index=ohlc.index)
 
 ###########################
 #     NORMALIZE
@@ -386,14 +394,14 @@ def RSI( ohlc, n=14):
   # calculate RS as ratio of the SMA(U,n) and SMA(D,n)
   # here we're using cutler's RSI because the EMA(D|U,n)
   # version is sensitive to where in the data the RSI begins
-  RS = ( pd.rolling_mean( U, window=n, min_periods=n-1) /
-         pd.rolling_mean( D, window=n, min_periods=n-1) )
+  RS = ( pd.Series(U).rolling(window=n, min_periods=n-1).mean() /
+         pd.Series(D).rolling(window=n, min_periods=n-1).mean())
   # convert to 0-100 indicator
   _RSI = 100 - ( 100 / (1 + RS))
   # n-period smoothing
-  _RSI = pd.ewma( _RSI, span=n)
+  _RSI = pd.DataFrame(_RSI).ewm(span=n).mean()
   # if we have any NaN values in the body of our ROC then we have problemz
-  assert False == np.isnan(_RSI[n+1:]).any()
+  assert False == pd.isna(_RSI[n+1:]).any()[0]
   # convert back into DF
   return pd.DataFrame( _RSI, index=ohlc.close.index, columns=["RSI_%s"%n] )
 
@@ -420,8 +428,8 @@ def RVI2( ohlc, n=14, s=10):
     USD[i] = ohlc.high.ix[i-s:i].std() if ohlc.high.ix[i] > ohlc.high.shift(1).ix[i] else 0
     DSD[i] = ohlc.high.ix[i-s:i].std() if ohlc.high.ix[i] < ohlc.high.shift(1).ix[i] else 0
 
-  U = pd.ewma( USD, span=(n*2)-1, min_periods=n)
-  D = pd.ewma( DSD, span=(n*2)-1, min_periods=n)
+  U = pd.DataFrame( USD).ewm( span=(n*2)-1, min_periods=n).mean()
+  D = pd.DataFrame( DSD).ewm( span=(n*2)-1, min_periods=n).mean()
   RVIH = 100 * ( U / (U + D) )
 
   # RVIL
@@ -433,14 +441,14 @@ def RVI2( ohlc, n=14, s=10):
     USD[i] = ohlc.low.ix[i-s:i].std() if ohlc.low.ix[i] > ohlc.low.shift(1).ix[i] else 0
     DSD[i] = ohlc.low.ix[i-s:i].std() if ohlc.low.ix[i] < ohlc.low.shift(1).ix[i] else 0
 
-  U = pd.ewma( USD, span=(n*2)-1, min_periods=n)
-  D = pd.ewma( DSD, span=(n*2)-1, min_periods=n)
+  U = pd.DataFrame( USD).ewm( span=(n*2)-1, min_periods=n).mean()
+  D = pd.DataFrame( DSD).ewm( span=(n*2)-1, min_periods=n).mean()
   RVIL = 100 * ( U / (U + D) )
 
   # new RVI (w/ inertia)
   _RVI2 = (RVIH + RVIL) / 2
 
-  return pd.DataFrame( {"RVI2_%s"%n:_RVI2}, index=[ohlc.index])
+  return pd.DataFrame( {"RVI2_%s"%n:_RVI2[0]}, index=ohlc.index)
 
 ###########################
 #  STANDARD DEVIATIONS
@@ -454,8 +462,8 @@ def STD( df, n):
       df : DataFrame or TimeSeries
       n : number of periods to calculate stddev over
   """
-  std = pd.rolling_std( df, window=n, min_periods=n)
-  return pd.DataFrame( {"STD": std}, index=[std.index])
+  std = pd.Series(df).rolling(window=n, min_periods=n).std()
+  return pd.DataFrame( {"STD": std}, index=std.index)
 
 ###########################
 #  TREND MOVEMENT INDEX
@@ -504,4 +512,4 @@ def TMI( ohlc, nb=10, nf=5):
     else:
       TMIz[i-1] = tmitmp
 
-  return pd.DataFrame( {"TMI":TMIz}, index=[ohlc.index])
+  return pd.DataFrame( {"TMI":TMIz}, index=ohlc.index)

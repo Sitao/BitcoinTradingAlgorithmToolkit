@@ -157,9 +157,9 @@ class Coin:
           for time_str in self.rolling:
             for window in self.rolling[time_str]:
               # default EMA ... TODO: allow users to change this
-              self.rolling[time_str][window] = pd.ewma( self.lastprice.resample( 
-                                                 time_str, fill_method="ffill"),
-                                                 span=window ,freq=time_str)
+              #self.rolling[time_str][window] = pd.DataFrame(self.lastprice.resample(time_str, fill_method="ffill")).ewm(span=window ,freq=time_str)
+              self.rolling[time_str][window] = pd.DataFrame(self.lastprice.resample(time_str, fill_method="ffill")).ewm(
+                  span=window).mean()
 
         # calculate our technical indicators
         if self._calc_indicators:
@@ -268,7 +268,7 @@ class Coin:
         for col in self.ohlc[time_str]:
           all = all.join( pd.DataFrame( { "%s_%s_%s"%(name, 
                   self.ohlc[time_str][col].name, time_str): self.ohlc[time_str][col]},
-                  index=[self.ohlc[time_str].index]), how="outer")
+                  index=self.ohlc[time_str].index), how="outer")
     return all
 
   ###########################
@@ -344,11 +344,11 @@ class Coin:
         Returns: dataframe to replace global lastprice.
     """
     # get our new data in a dataframe
-    new = pd.DataFrame( {"lastprice":price}, index=[t])
+    new = pd.DataFrame( {"lastprice":price}, index=t)
     # do we have any data in our DF?
     if len( self.lastprice) == 0:
       # no. so start us off
-      return pd.DataFrame( new, columns=["lastprice"])
+      return pd.DataFrame( new, columns="lastprice")
     else:
       # is our price the same as the old? and have we gone 30s without a value?
       if ( ( price == self.lastprice.ix[-1][0]) and
@@ -414,7 +414,7 @@ class Coin:
     # calc avg between bid and ask
     price = (bid + ask) / 2.0
     # get our new data in a datafr(bid + ask) / 2.0ame
-    new = pd.DataFrame( {name:price}, index=[t])
+    new = pd.DataFrame( {name:price}, index=t)
     # do we have any data in our DF?
     if len( old) == 0:
       # no. so start us off
@@ -785,8 +785,12 @@ class Data:
           f = open( filename, "wb")
           if self.verbose: print "[*]", "Saving midprices to %s" % filename
           cPickle.dump( bas, f)
+
         self.ltc_opts["instant"] = pd.DataFrame( {"lastprice":bas}, 
-                                     index=[self._ltc_depth_offline.index])
+                                     index=self._ltc_depth_offline.index)
+        self._ltc_depth_offline.to_csv('logs\offline.csv')
+        self.ltc_opts["instant"].to_csv('logs\instant.csv')
+
       # otherwise hand it lastprice
       else:
         self.ltc_opts["instant"] = self._ltc_offline
@@ -819,7 +823,7 @@ class Data:
       if self.gox_opts["calc_mid"]:
         if self.verbose: print "[*]","Calculating midprices ..."
         bas = [ pl2.bid_ask(self._gox_depth_offline.ix[i][0], avg=True) for i in xrange( len( self._gox_depth_offline))]
-        self.gox_opts["instant"] = pd.DataFrame( {"lastprice":bas}, index=[self._gox_depth_offline.index])
+        self.gox_opts["instant"] = pd.DataFrame( {"lastprice":bas}, index=self._gox_depth_offline.index)
       # otherwise hand it lastprice
       else:
         self.gox_opts["instant"] = self._gox_offline
