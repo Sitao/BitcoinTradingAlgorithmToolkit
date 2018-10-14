@@ -1,18 +1,13 @@
 import pandas as pd
-import src.data as data
+import src.data
 import dtools
-import numpy as np
-from matplotlib import pylab as plt
-
-# noinspection PyUnresolvedReferences
 from pybrain.datasets import SupervisedDataSet
 from pybrain.tools.shortcuts import buildNetwork
-# noinspection PyUnresolvedReferences
 from pybrain.supervised.trainers import RPropMinusTrainer
-# noinspection PyUnresolvedReferences
 from pybrain.structure import RecurrentNetwork, FullConnection
-# noinspection PyUnresolvedReferences
 from pybrain.structure.modules import LinearLayer, TanhLayer
+import numpy as np
+from matplotlib import pylab as plt
 
 # 10-minute timeframe
 time_str = "10min"
@@ -53,7 +48,7 @@ ltc_opts = \
 
 # Or if you wanted to use an randomized genetic code ... add this in place of
 # ltc_opts in Data() to use it
-import src.genetic as genetic
+import genetic
 
 # create a random individual
 individual = genetic.rand_gene()
